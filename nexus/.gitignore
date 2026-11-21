@@ -1,0 +1,11 @@
+# Datos personales: NUNCA subir al repositorio
+datos/
+datos-*/
+*.db
+*.db-wal
+*.db-shm
+*.nexus
+# Compilados
+*.exe
+nexus
+dist/
