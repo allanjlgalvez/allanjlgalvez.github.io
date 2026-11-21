@@ -83,6 +83,12 @@ CREATE INDEX files_entity ON files(entity_id);
 CREATE TABLE settings (key TEXT PRIMARY KEY, value TEXT NOT NULL);
 CREATE TABLE sessions (token TEXT PRIMARY KEY, expires INTEGER NOT NULL);
 `,
+	// v2: papelera y verificación (Depurador de contactos)
+	`
+ALTER TABLE entities ADD COLUMN deleted_at TEXT NOT NULL DEFAULT '';
+ALTER TABLE entities ADD COLUMN verified TEXT NOT NULL DEFAULT '';
+CREATE INDEX entities_deleted ON entities(deleted_at);
+`,
 }
 
 func migrate() error {

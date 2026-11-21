@@ -63,6 +63,13 @@ const ICONS = {
   open: '<path d="M14 4h6v6M20 4l-9 9M18 14v6H4V6h6"/>',
   image: '<path d="M3 4h18v16H3z"/><circle cx="9" cy="10" r="2"/><path d="M3 18l6-5 4 3 3-2 5 4"/>',
   clock: '<circle cx="12" cy="12" r="8.5"/><path d="M12 7v5l3 2"/>',
+  broom: '<path d="M20 3l-7.5 7.5"/><path d="M11 9l4 4-2.5 7.5L4 12z"/><path d="M7 14.5l-3 3M9.5 17l-2 3"/>',
+  check: '<path d="M4 12.5l5 5L20 6.5"/>',
+  undo: '<path d="M9 5L4 10l5 5"/><path d="M4 10h10a6 6 0 0 1 0 12h-3"/>',
+  skip: '<path d="M12 4v13M6 11l6 6 6-6M5 21h14"/>',
+  restore: '<path d="M4 4v6h6"/><path d="M5 10a8 8 0 1 1 2 6"/>',
+  alert: '<path d="M12 3l10 18H2z"/><path d="M12 10v5M12 18v.5"/>',
+  merge: '<path d="M6 3v6a6 6 0 0 0 6 6h0a6 6 0 0 1 6 6"/><path d="M18 3v6a6 6 0 0 1-6 6"/><path d="M15 18l3 3 3-3"/>',
 };
 const ENTITY_ICONS = ['person', 'car', 'paw', 'home', 'building', 'heart', 'star', 'briefcase', 'plane', 'bolt'];
 
@@ -279,6 +286,7 @@ function renderShell() {
   navEl = h('nav', { class: 'nav' },
     h('a', { href: '#/red', dataset: { r: 'red' } }, ic('graph'), h('span', null, 'Red')),
     h('a', { href: '#/lista', dataset: { r: 'lista' } }, ic('list'), h('span', null, 'Registros')),
+    h('a', { href: '#/depurador', dataset: { r: 'depurador' } }, ic('broom'), h('span', null, 'Depurador')),
     h('a', { href: '#/ajustes', dataset: { r: 'ajustes' } }, ic('gear'), h('span', null, 'Sistema')));
   viewEl = h('main', { class: 'view' });
   $('#app').replaceChildren(
@@ -298,6 +306,7 @@ document.addEventListener('keydown', e => {
 
 function route() {
   destroyCys();
+  if (S.leave) { const f = S.leave; S.leave = null; try { f(); } catch { } }
   const p = (location.hash.slice(2) || 'red').split('/');
   navEl.querySelectorAll('a').forEach(a => a.classList.toggle('on', a.dataset.r === (p[0] === 'e' ? 'lista' : p[0] === 'tipo' ? 'ajustes' : p[0])));
   viewEl.className = 'view';
@@ -307,6 +316,7 @@ function route() {
     case 'lista': return viewList();
     case 'e': return viewEntity(+p[1], p[2] === 'editar');
     case 'ajustes': return viewSettings();
+    case 'depurador': return viewCleaner(p[1] || 'duplicados');
     case 'tipo': return viewTypeEditor(p[1] === 'nuevo' ? null : +p[1]);
     default: return viewGraph();
   }
@@ -806,8 +816,8 @@ function editForm(e) {
 }
 
 async function deleteEntity(e) {
-  if (!await confirmDlg('Borrar registro', `Se borrará «${e.name}» con sus notas, archivos y conexiones. No se puede deshacer.`)) return;
-  try { await api('DELETE', '/api/entities/' + e.id); toast('Registro borrado'); await loadAll(); location.hash = '#/lista'; } catch (er) { fail(er); }
+  if (!await confirmDlg('Mover a la papelera', `«${e.name}» se moverá a la papelera con sus notas, archivos y conexiones. Puedes restaurarlo desde Depurador → Papelera.`, 'Mover a papelera')) return;
+  try { await api('DELETE', '/api/entities/' + e.id); toast('Movido a la papelera'); await loadAll(); location.hash = '#/lista'; } catch (er) { fail(er); }
 }
 
 /* ---------- línea de tiempo ---------- */

@@ -66,7 +66,7 @@ Firewall permita `nexus.exe` en redes privadas.
 
 > La PC tiene que estar encendida y con NEXUS abierto. Si en algún momento
 > quieres un acceso 24/7, NEXUS también corre en una Raspberry Pi o NAS de casa
-> (versión Linux, ver sección 9).
+> (versión Linux, ver sección 10).
 
 ## 3. Cómo se usa
 
@@ -107,7 +107,33 @@ Firewall permita `nexus.exe` en redes privadas.
 También acepta el CSV de Google, el CSV de Outlook y los vCard exportados de
 iPhone/iCloud. Puedes importar las veces que quieras: los duplicados se detectan.
 
-## 5. Agregar campos o tipos nuevos
+## 5. Depurador de contactos
+
+Menú **Depurador**. Sirve para limpiar la base, sobre todo después de importar
+de Google. Arriba eliges el tipo de registro (normalmente *Persona*) y, si
+quieres, una etiqueta (por ejemplo `google`).
+
+| Pestaña | Qué hace |
+|---|---|
+| **Duplicados** | Agrupa contactos con el mismo teléfono (ignora espacios, guiones y ladas como `+52 1`), el mismo correo o nombres muy parecidos. Marca para conservar el más completo, y con **Fusionar en el marcado** junta todo en uno: datos, etiquetas, conexiones, notas y archivos. Lo que no cabe se guarda como nota. También puedes mandar uno a la papelera, marcar **No son duplicados** o **fusionar automáticamente** todos los que comparten teléfono o correo. |
+| **Incompletos** | Contactos sin nombre real, o sin teléfono ni correo. Botón **Seleccionar todos y mover a papelera**. |
+| **Empresas / servicios** | Detecta palabras como soporte, ventas, info, noreply, banco, facturación, taller o servicio, y contactos que solo tienen un correo corporativo sin teléfono. |
+| **Triage rápido** | Revisa uno por uno con tarjetas grandes y barra de progreso («14 de 450»). Teclas: **←** descartar (papelera), **→** conservar (queda verificado), **↓** saltar para después, **Ctrl+Z** deshacer. En el celular puedes deslizar la tarjeta. Los saltados se revisan al final. |
+| **Papelera** | Todo lo descartado queda aquí: puedes **restaurarlo** o **eliminarlo definitivamente**. Nada se borra sin pasar por la papelera, incluido el botón «Borrar» de los expedientes. |
+| **Exportar** | **CSV compatible con Google Contactos** y **JSON completo**, sin lo que esté en la papelera. Por privacidad, el CSV solo lleva datos de contacto: nunca datos médicos ni notas. |
+
+Los contactos que conservas en el triage quedan **verificados** y ya no
+aparecen como sugerencias en Incompletos ni en Empresas (puedes mostrarlos con
+la casilla «Mostrar también los verificados»).
+
+### Llevar la limpieza a tu celular
+1. En contacts.google.com haz un respaldo: **Exportar → CSV de Google**.
+2. Selecciona todos tus contactos en Google y bórralos (Google los guarda 30
+   días en su papelera).
+3. En Google usa **Importar** con el CSV limpio que generó NEXUS.
+4. El celular se sincroniza solo.
+
+## 6. Agregar campos o tipos nuevos
 
 Ve a **Sistema → Tipos de registro y campos**:
 
@@ -119,7 +145,7 @@ Ve a **Sistema → Tipos de registro y campos**:
 - Si quitas un campo, **no se pierde** lo que ya capturaste: aparece en la
   pestaña *Otros datos* del expediente.
 
-## 6. Respaldos
+## 7. Respaldos
 
 - **Automático:** cada vez que abres NEXUS se guarda una copia diaria de la base
   de datos en `datos\respaldos\auto` (se conservan las 10 más recientes). Esta
@@ -136,12 +162,12 @@ Ve a **Sistema → Tipos de registro y campos**:
 3. Escribe la contraseña del respaldo.
 4. Tus datos actuales no se borran: se renombran a `datos-anterior-FECHA`.
 
-## 7. Cambiar de computadora
+## 8. Cambiar de computadora
 
 Copia la carpeta completa `D:\Nexus` (con `datos` adentro) a la nueva
 computadora y abre `nexus.exe`. Nada más.
 
-## 8. Seguridad
+## 9. Seguridad
 
 - Todo se queda en `datos\`: la base `nexus.db`, `archivos\` y `respaldos\`.
 - NEXUS pide contraseña en todos los dispositivos. Las sesiones duran 30 días;
@@ -165,7 +191,7 @@ computadora y abre `nexus.exe`. Nada más.
 }
 ```
 
-## 9. Para desarrolladores
+## 10. Para desarrolladores
 
 Código fuente: Go (servidor + SQLite sin dependencias de C) e interfaz en
 JavaScript sin frameworks (`web/`). La interfaz va incrustada dentro del
@@ -186,9 +212,10 @@ GOOS=linux GOARCH=arm64 go build -o nexus-pi .        # Raspberry Pi 64 bits
 | `db.go` | Esquema SQLite, migraciones, tipos y campos iniciales |
 | `api.go` | API REST (registros, conexiones, línea de tiempo, archivos) |
 | `auth.go` | Contraseña (bcrypt), sesiones, límite de intentos |
+| `cleaner.go` | Depurador: papelera, verificación, fusión de duplicados, exportación CSV/JSON |
 | `importer.go` | Descarga de fotos de contactos importados |
 | `backup.go` | Respaldos cifrados (scrypt + AES-256-GCM) y restauración |
-| `web/` | Interfaz: `index.html`, `app.css`, `app.js`, `import.js` (importador), Cytoscape.js y fuentes |
+| `web/` | Interfaz: `index.html`, `app.css`, `app.js`, `import.js` (importador), `cleaner.js` (depurador), Cytoscape.js y fuentes |
 | `actualizar.bat` | Instalador / actualizador para Windows |
 | `../.github/workflows/nexus.yml` | Compila y publica `nexus.exe` en GitHub con cada cambio |
 

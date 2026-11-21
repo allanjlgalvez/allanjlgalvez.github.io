@@ -37,8 +37,9 @@ D:\Nexus\
         ├── auth.go        contraseña bcrypt, sesiones en BD (cookie nexus_s), límite de intentos
         ├── backup.go      respaldo .nexus (scrypt + AES-256-GCM por bloques) y -restaurar
         ├── importer.go    descarga de fotos de Google (solo *.googleusercontent.com / *.ggpht.com)
+        ├── cleaner.go     depurador: papelera, verificar, fusionar duplicados, exportar CSV de Google y JSON
         ├── console_windows.go  consola UTF-8 y título en Windows
-        ├── web\index.html, app.css, app.js, import.js, vendor\ (cytoscape 3.35, fuentes Rajdhani/Orbitron)
+        ├── web\index.html, app.css, app.js, import.js, cleaner.js, vendor\ (cytoscape 3.35, fuentes Rajdhani/Orbitron)
         ├── actualizar.bat (CRLF, sin acentos), build.sh, LEEME.md (manual para Allan)
         └── dev\seed.py    carga datos ficticios de prueba
 ```
@@ -50,7 +51,11 @@ D:\Nexus\
     `shape` (forma del nodo en Cytoscape) y `schema` JSON:
     `{"sections":[{"id","label","fields":[{"key","label","type","options"}]}]}`.
     Tipos de campo: text, textarea, number, date, select, phone, email, url, checkbox.
-  - `entities`: `name`, `photo_id`, `tags` (JSON array), `data` (JSON objeto `key → valor`).
+  - `entities`: `name`, `photo_id`, `tags` (JSON array), `data` (JSON objeto `key → valor`),
+    `deleted_at` (≠ '' = en la papelera) y `verified` (fecha en que se revisó en el triage).
+    **Nada se borra de inmediato**: `DELETE /api/entities/:id` manda a la papelera; solo
+    `POST /api/trash/purge` borra definitivamente. Todas las consultas de la app deben
+    filtrar `deleted_at=''` (usar la constante `entityCols` + `scanEntity`).
   - `relations` (dirigidas: `from_id —label→ to_id`), `events` (línea de tiempo),
     `files` (en `datos/archivos/<entity_id>/`, miniatura opcional `_t.jpg`),
     `settings` (hash de contraseña), `sessions`.
@@ -68,7 +73,14 @@ D:\Nexus\
   agregan antes que las props, para que `value` de `<select>` funcione); `ic(nombre)`
   da íconos SVG; `api()`, `modal()`, `confirmDlg()`, `toast()`; router por hash:
   `#/red`, `#/lista`, `#/e/:id`, `#/e/:id/editar`, `#/ajustes`, `#/tipo/:id|nuevo`.
-  `import.js` contiene el importador vCard/CSV y usa las funciones globales de `app.js`.
+  `import.js` contiene el importador vCard/CSV y `cleaner.js` el Depurador (`#/depurador/<pestaña>`);
+  ambos usan las funciones globales de `app.js`. Una vista que agrega atajos de teclado debe
+  quitarlos en `S.leave` (lo llama `route()` al cambiar de pantalla).
+- **Depurador**: el análisis (duplicados por teléfono normalizado a 10 dígitos, correo y nombres
+  parecidos; incompletos; empresas por palabras clave y correo corporativo) corre en el navegador.
+  La fusión (`POST /api/merge`) es en el servidor, en una transacción: llena vacíos, mueve
+  conexiones/eventos/archivos, guarda conflictos como nota y manda los duplicados a la papelera.
+  Los pares marcados «No son duplicados» se guardan en `localStorage` (`nx.notdup`).
 - **Diagramas (Cytoscape)**: crear siempre con `makeCy()` y `runLayout()`; al
   cambiar de pantalla `destroyCys()` detiene animaciones antes de destruir
   (si no, aparece `Cannot read properties of null (reading 'notify')`). El
@@ -110,7 +122,7 @@ a `D:\Nexus\nexus.exe` (o hacer push y que él corra `actualizar.bat`).
    `nexus-latest` junto con `LEEME.md`, `actualizar.bat` y `version.txt`.
 3. Allan da doble clic en `D:\Nexus\actualizar.bat`.
 
-## Estado actual (v1.1)
+## Estado actual (v1.2)
 
 Hecho: red (vistas Red/Árbol/Órbita, filtros por tipo, cumpleaños próximos),
 expedientes con pestañas por sección, mapa de conexiones navegable, edición,
@@ -118,11 +130,11 @@ etiquetas, línea de tiempo, archivos con galería y foto de perfil, búsqueda
 global (Ctrl+K, incluye notas), editor de tipos y campos, acceso desde el
 celular con QR, cambio de contraseña, respaldo cifrado + restaurar arrastrando
 el `.nexus` sobre el `.exe`, respaldo automático diario, importador de Google
-Contactos / iPhone / Outlook con detección de duplicados, actualizador.
+Contactos / iPhone / Outlook con detección de duplicados, actualizador, Depurador de
+contactos (duplicados, incompletos, empresas, triage rápido, papelera, exportar CSV/JSON).
 
 Ideas pendientes que se platicaron o que convienen:
 - Opción de emergencia para restablecer la contraseña desde la PC (sin perder datos).
-- Exportar a Excel/CSV.
 - Recordatorios (cumpleaños, vigencia de seguros, citas médicas).
 - Icono propio para `nexus.exe`.
 - Mover el proyecto a un repositorio privado (habría que cambiar cómo descarga `actualizar.bat`).

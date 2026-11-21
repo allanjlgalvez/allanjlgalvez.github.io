@@ -23,7 +23,7 @@ import (
 	"time"
 )
 
-var version = "1.1.0" // el compilador de GitHub la reemplaza con -X main.version
+var version = "1.2.0" // el compilador de GitHub la reemplaza con -X main.version
 
 //go:embed web
 var webFS embed.FS

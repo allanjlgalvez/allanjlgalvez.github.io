@@ -46,6 +46,15 @@ func routes(web fs.FS) http.Handler {
 	mux.HandleFunc("PUT /api/entities/{id}/photo", auth(hEntityPhoto))
 	mux.HandleFunc("POST /api/entities/{id}/photo-url", auth(hPhotoURL))
 
+	mux.HandleFunc("GET /api/trash", auth(hTrashList))
+	mux.HandleFunc("POST /api/trash", auth(hTrash))
+	mux.HandleFunc("POST /api/trash/restore", auth(hTrashRestore))
+	mux.HandleFunc("POST /api/trash/purge", auth(hTrashPurge))
+	mux.HandleFunc("POST /api/verify", auth(hVerify))
+	mux.HandleFunc("POST /api/merge", auth(hMerge))
+	mux.HandleFunc("GET /api/export/google.csv", auth(hExportCSV))
+	mux.HandleFunc("GET /api/export/nexus.json", auth(hExportJSON))
+
 	mux.HandleFunc("POST /api/relations", auth(hRelationSave))
 	mux.HandleFunc("PUT /api/relations/{id}", auth(hRelationSave))
 	mux.HandleFunc("DELETE /api/relations/{id}", auth(hRelationDelete))
@@ -235,15 +244,20 @@ type Type struct {
 }
 
 type Entity struct {
-	ID      int64           `json:"id"`
-	TypeID  int64           `json:"type_id"`
-	Name    string          `json:"name"`
-	PhotoID *int64          `json:"photo_id"`
-	Tags    json.RawMessage `json:"tags"`
-	Data    json.RawMessage `json:"data"`
-	Created string          `json:"created"`
-	Updated string          `json:"updated"`
+	ID       int64           `json:"id"`
+	TypeID   int64           `json:"type_id"`
+	Name     string          `json:"name"`
+	PhotoID  *int64          `json:"photo_id"`
+	Tags     json.RawMessage `json:"tags"`
+	Data     json.RawMessage `json:"data"`
+	Created  string          `json:"created"`
+	Updated  string          `json:"updated"`
+	Verified string          `json:"verified"`
+	Deleted  string          `json:"deleted"`
 }
+
+// Columnas que lee scanEntity, en orden.
+const entityCols = "id,type_id,name,photo_id,tags,data,created,updated,verified,deleted_at"
 
 type Relation struct {
 	ID     int64  `json:"id"`
@@ -257,7 +271,7 @@ func hAll(w http.ResponseWriter, r *http.Request) {
 
 	types := []Type{}
 	rows, err := db.Query(`SELECT t.id,t.name,t.color,t.icon,t.shape,t.schema,t.sort,
-		(SELECT COUNT(*) FROM entities e WHERE e.type_id=t.id) FROM types t ORDER BY t.sort,t.id`)
+		(SELECT COUNT(*) FROM entities e WHERE e.type_id=t.id AND e.deleted_at='') FROM types t ORDER BY t.sort,t.id`)
 	if err != nil {
 		serverErr(w, err)
 		return
@@ -277,7 +291,7 @@ func hAll(w http.ResponseWriter, r *http.Request) {
 	out["types"] = types
 
 	ents := []Entity{}
-	rows, err = db.Query(`SELECT id,type_id,name,photo_id,tags,data,created,updated FROM entities ORDER BY name COLLATE NOCASE`)
+	rows, err = db.Query(`SELECT ` + entityCols + ` FROM entities WHERE deleted_at='' ORDER BY name COLLATE NOCASE`)
 	if err != nil {
 		serverErr(w, err)
 		return
@@ -295,7 +309,9 @@ func hAll(w http.ResponseWriter, r *http.Request) {
 	out["entities"] = ents
 
 	rels := []Relation{}
-	rows, err = db.Query(`SELECT id,from_id,to_id,label FROM relations ORDER BY id`)
+	rows, err = db.Query(`SELECT r.id,r.from_id,r.to_id,r.label FROM relations r
+		JOIN entities a ON a.id=r.from_id AND a.deleted_at=''
+		JOIN entities b ON b.id=r.to_id AND b.deleted_at='' ORDER BY r.id`)
 	if err != nil {
 		serverErr(w, err)
 		return
@@ -321,7 +337,7 @@ func scanEntity(s scanner) (Entity, error) {
 	var e Entity
 	var photo sql.NullInt64
 	var tags, data string
-	err := s.Scan(&e.ID, &e.TypeID, &e.Name, &photo, &tags, &data, &e.Created, &e.Updated)
+	err := s.Scan(&e.ID, &e.TypeID, &e.Name, &photo, &tags, &data, &e.Created, &e.Updated, &e.Verified, &e.Deleted)
 	if photo.Valid {
 		e.PhotoID = &photo.Int64
 	}
@@ -480,7 +496,7 @@ func hTypeDelete(w http.ResponseWriter, r *http.Request) {
 	var n int
 	_ = db.QueryRow("SELECT COUNT(*) FROM entities WHERE type_id=?", id).Scan(&n)
 	if n > 0 {
-		jsonErr(w, http.StatusConflict, fmt.Sprintf("no se puede borrar: hay %d registros de este tipo", n))
+		jsonErr(w, http.StatusConflict, fmt.Sprintf("no se puede borrar: hay %d registros de este tipo (incluye los de la papelera)", n))
 		return
 	}
 	if _, err := db.Exec("DELETE FROM types WHERE id=?", id); err != nil {
@@ -511,7 +527,7 @@ type File struct {
 
 func hEntityGet(w http.ResponseWriter, r *http.Request) {
 	id := pathID(r)
-	e, err := scanEntity(db.QueryRow(`SELECT id,type_id,name,photo_id,tags,data,created,updated FROM entities WHERE id=?`, id))
+	e, err := scanEntity(db.QueryRow(`SELECT `+entityCols+` FROM entities WHERE id=?`, id))
 	if errors.Is(err, sql.ErrNoRows) {
 		jsonErr(w, http.StatusNotFound, "no encontrado")
 		return
@@ -599,13 +615,12 @@ func hEntitySave(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, map[string]int64{"id": id})
 }
 
+// hEntityDelete manda el registro a la papelera (nunca borra de inmediato).
 func hEntityDelete(w http.ResponseWriter, r *http.Request) {
-	id := pathID(r)
-	if _, err := db.Exec("DELETE FROM entities WHERE id=?", id); err != nil {
+	if err := trashIDs([]int64{pathID(r)}); err != nil {
 		serverErr(w, err)
 		return
 	}
-	_ = os.RemoveAll(filepath.Join(filesDir, strconv.FormatInt(id, 10)))
 	writeJSON(w, map[string]bool{"ok": true})
 }
 
