@@ -44,6 +44,7 @@ func routes(web fs.FS) http.Handler {
 	mux.HandleFunc("PUT /api/entities/{id}", auth(hEntitySave))
 	mux.HandleFunc("DELETE /api/entities/{id}", auth(hEntityDelete))
 	mux.HandleFunc("PUT /api/entities/{id}/photo", auth(hEntityPhoto))
+	mux.HandleFunc("POST /api/entities/{id}/photo-url", auth(hPhotoURL))
 
 	mux.HandleFunc("POST /api/relations", auth(hRelationSave))
 	mux.HandleFunc("PUT /api/relations/{id}", auth(hRelationSave))

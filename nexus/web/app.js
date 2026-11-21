@@ -486,7 +486,9 @@ function viewGraph() {
       h('div', { class: 'pulse' }, ic('graph')),
       h('div', { class: 'big' }, 'RED VACÍA'),
       h('p', { class: 'muted' }, 'Agrega a tu primer contacto. Después conecta familiares, amigos, vehículos y mascotas para ver tu red como un diagrama.'),
-      h('button', { class: 'btn solid', onclick: () => newEntityDlg() }, ic('plus'), 'Agregar contacto'))));
+      h('div', { style: { display: 'flex', gap: '10px', 'justify-content': 'center', 'flex-wrap': 'wrap' } },
+        h('button', { class: 'btn solid', onclick: () => newEntityDlg() }, ic('plus'), 'Agregar contacto'),
+        h('button', { class: 'btn', onclick: () => importDlg() }, ic('download'), 'Importar de Google')))));
     return;
   }
 
@@ -597,7 +599,9 @@ function viewList() {
   const tags = allTags();
   const tagsEl = h('div', { style: { margin: '-8px 0 18px' } }, tags.map(t => h('span', { class: 'tag', dataset: { tag: t }, onclick: () => { flt.tag = flt.tag === t ? '' : t; draw(); } }, t)));
   viewEl.replaceChildren(h('div', { class: 'page' },
-    h('div', { class: 'kick' }, 'Base de datos'), h('h1', null, 'Registros'),
+    h('div', { style: { display: 'flex', 'align-items': 'end', gap: '12px', 'flex-wrap': 'wrap' } },
+      h('div', { style: { flex: 1 } }, h('div', { class: 'kick' }, 'Base de datos'), h('h1', null, 'Registros')),
+      h('button', { class: 'btn', onclick: () => importDlg() }, ic('download'), 'Importar contactos')),
     chips, tags.length ? tagsEl : '', grid));
   draw();
 }
@@ -1039,6 +1043,10 @@ async function viewSettings() {
             ic(t.icon), h('div', null, h('div', { class: 'nm' }, t.name), h('div', { class: 's' }, `${fieldsOf(t).length} campos · ${t.count} registros`)))),
           h('button', { class: 'tcard add', onclick: () => location.hash = '#/tipo/nuevo' }, ic('plus'), h('span', { class: 'nm' }, 'Nuevo tipo')))),
 
+      h('section', { class: 'panel cut full' },
+        h('div', { class: 'ph' }, h('h2', null, 'Importar contactos'), h('button', { class: 'btn sm solid', onclick: () => importDlg() }, ic('download'), 'Importar')),
+        h('p', { class: 'muted', style: { margin: 0 } }, 'Trae tus contactos de Google Contactos, iPhone u Outlook (archivo .vcf o .csv), con fotos, cumpleaños y etiquetas. Detecta duplicados.')),
+
       h('section', { class: 'panel cut' },
         h('div', { class: 'ph' }, h('h2', null, 'Acceso desde el celular')),
         info.red_local ? (urls.length ? h('div', null,
@@ -1176,4 +1184,4 @@ function viewTypeEditor(id) {
   draw();
 }
 
-boot();
+window.addEventListener('DOMContentLoaded', boot);

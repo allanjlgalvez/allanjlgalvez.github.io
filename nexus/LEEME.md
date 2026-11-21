@@ -15,11 +15,11 @@ como un diagrama interactivo.
 
 ---
 
-## 1. Primer uso (Windows)
+## 1. Instalar en `D:\Nexus` (Windows)
 
-1. Descomprime `NEXUS-windows.zip` donde quieras guardarlo, por ejemplo en
-   `Documentos\NEXUS` o en una USB.
-2. Haz doble clic en **`nexus.exe`**.
+1. Crea la carpeta `D:\Nexus`.
+2. Pon ahí el archivo **`actualizar.bat`** y dale doble clic. Descarga la última
+   versión de `nexus.exe` y abre NEXUS.
    - Windows SmartScreen puede advertir que es una app desconocida, porque no
      está firmada. Elige **Más información → Ejecutar de todas formas**.
    - El Firewall de Windows preguntará si permites el acceso a la red. Marca
@@ -28,6 +28,27 @@ como un diagrama interactivo.
    `http://localhost:8787`. **Deja esa ventana abierta** mientras usas NEXUS y
    ciérrala para apagarlo.
 4. Crea tu contraseña. **Guárdala bien: no hay forma de recuperarla.**
+
+Desde entonces, para abrir NEXUS solo das doble clic en `D:\Nexus\nexus.exe`.
+Te conviene crear un acceso directo en el escritorio: clic derecho sobre
+`nexus.exe` → **Mostrar más opciones → Enviar a → Escritorio**.
+
+```
+D:\Nexus\
+├── nexus.exe            ← el programa
+├── actualizar.bat       ← doble clic para actualizar
+├── nexus.anterior.exe   ← versión previa (por si algo falla)
+└── datos\               ← TU información (base de datos, fotos, respaldos)
+```
+
+### Actualizar a una versión nueva
+
+Cuando haya cambios, solo **doble clic en `actualizar.bat`**. El archivo cierra
+NEXUS, descarga la versión nueva, la reemplaza y lo vuelve a abrir. Tus datos no
+se tocan. Si la versión nueva diera problemas, borra `nexus.exe` y renombra
+`nexus.anterior.exe` a `nexus.exe`.
+
+La versión instalada aparece en **Sistema → Información**.
 
 ## 2. Usar NEXUS desde el celular
 
@@ -45,7 +66,7 @@ Firewall permita `nexus.exe` en redes privadas.
 
 > La PC tiene que estar encendida y con NEXUS abierto. Si en algún momento
 > quieres un acceso 24/7, NEXUS también corre en una Raspberry Pi o NAS de casa
-> (versión Linux, ver sección 8).
+> (versión Linux, ver sección 9).
 
 ## 3. Cómo se usa
 
@@ -66,7 +87,27 @@ Firewall permita `nexus.exe` en redes privadas.
 - **Cumpleaños:** la pantalla **Red** muestra los cumpleaños de los próximos 45
   días, tomados del campo *Fecha de nacimiento*.
 
-## 4. Agregar campos o tipos nuevos
+## 4. Importar tus contactos de Google
+
+1. En la PC abre **contacts.google.com** → menú izquierdo → **Exportar**.
+2. Elige **Contactos** (todos) y el formato **vCard (para Contactos de iOS)** →
+   **Exportar**. Se descarga `contacts.vcf`.
+3. En NEXUS ve a **Registros → Importar contactos** (también está en
+   **Sistema**) y arrastra el archivo.
+4. Revisa la vista previa y presiona **Importar**:
+   - Se traen nombre, apodo, teléfonos, correos, dirección, empresa, puesto,
+     cumpleaños, notas, etiquetas de Google y fotos.
+   - Los contactos que ya existen (por nombre, teléfono o correo) se
+     **completan**: solo se llenan los datos vacíos, nunca se borra nada. También
+     puedes omitirlos o duplicarlos.
+   - Los teléfonos y correos de más se guardan como nota en la línea de tiempo.
+   - Las fotos de Google se descargan de internet; si no hay conexión, el
+     contacto se importa sin foto.
+
+También acepta el CSV de Google, el CSV de Outlook y los vCard exportados de
+iPhone/iCloud. Puedes importar las veces que quieras: los duplicados se detectan.
+
+## 5. Agregar campos o tipos nuevos
 
 Ve a **Sistema → Tipos de registro y campos**:
 
@@ -78,7 +119,7 @@ Ve a **Sistema → Tipos de registro y campos**:
 - Si quitas un campo, **no se pierde** lo que ya capturaste: aparece en la
   pestaña *Otros datos* del expediente.
 
-## 5. Respaldos
+## 6. Respaldos
 
 - **Automático:** cada vez que abres NEXUS se guarda una copia diaria de la base
   de datos en `datos\respaldos\auto` (se conservan las 10 más recientes). Esta
@@ -95,12 +136,12 @@ Ve a **Sistema → Tipos de registro y campos**:
 3. Escribe la contraseña del respaldo.
 4. Tus datos actuales no se borran: se renombran a `datos-anterior-FECHA`.
 
-## 6. Cambiar de computadora
+## 7. Cambiar de computadora
 
-Copia la carpeta completa de NEXUS (`nexus.exe` + `datos`) a la nueva
+Copia la carpeta completa `D:\Nexus` (con `datos` adentro) a la nueva
 computadora y abre `nexus.exe`. Nada más.
 
-## 7. Seguridad
+## 8. Seguridad
 
 - Todo se queda en `datos\`: la base `nexus.db`, `archivos\` y `respaldos\`.
 - NEXUS pide contraseña en todos los dispositivos. Las sesiones duran 30 días;
@@ -124,7 +165,7 @@ computadora y abre `nexus.exe`. Nada más.
 }
 ```
 
-## 8. Para desarrolladores
+## 9. Para desarrolladores
 
 Código fuente: Go (servidor + SQLite sin dependencias de C) e interfaz en
 JavaScript sin frameworks (`web/`). La interfaz va incrustada dentro del
@@ -145,7 +186,10 @@ GOOS=linux GOARCH=arm64 go build -o nexus-pi .        # Raspberry Pi 64 bits
 | `db.go` | Esquema SQLite, migraciones, tipos y campos iniciales |
 | `api.go` | API REST (registros, conexiones, línea de tiempo, archivos) |
 | `auth.go` | Contraseña (bcrypt), sesiones, límite de intentos |
+| `importer.go` | Descarga de fotos de contactos importados |
 | `backup.go` | Respaldos cifrados (scrypt + AES-256-GCM) y restauración |
-| `web/` | Interfaz: `index.html`, `app.css`, `app.js`, Cytoscape.js y fuentes |
+| `web/` | Interfaz: `index.html`, `app.css`, `app.js`, `import.js` (importador), Cytoscape.js y fuentes |
+| `actualizar.bat` | Instalador / actualizador para Windows |
+| `../.github/workflows/nexus.yml` | Compila y publica `nexus.exe` en GitHub con cada cambio |
 
 Licencias de terceros: Cytoscape.js (MIT), fuentes Rajdhani y Orbitron (SIL OFL).
