@@ -19,6 +19,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"runtime"
+	"sort"
 	"strings"
 	"time"
 )
@@ -149,12 +150,33 @@ func loadConfig() {
 	_ = os.WriteFile(p, out, 0o600)
 }
 
-// lanURLs devuelve las direcciones IPv4 privadas de esta PC.
+// Adaptadores virtuales (WSL, Hyper-V, VirtualBox, VPN…) que tienen IP privada
+// pero no son la red de la casa: no sirven para entrar desde el celular.
+var virtualIfaces = []string{"vethernet", "virtualbox", "vmware", "hyper-v", "wsl", "docker", "vbox",
+	"loopback", "bluetooth", "tailscale", "zerotier", "hamachi", "vpn", "tap-", "tun", "npcap", "br-", "veth"}
+
+// lanURLs devuelve las direcciones de esta PC en la red de la casa, primero
+// las de red doméstica típica (192.168.x.x).
 func lanURLs() []string {
-	var urls []string
+	type cand struct {
+		url  string
+		rank int
+	}
+	var cs []cand
 	ifaces, _ := net.Interfaces()
 	for _, ifc := range ifaces {
 		if ifc.Flags&net.FlagUp == 0 || ifc.Flags&net.FlagLoopback != 0 {
+			continue
+		}
+		name := strings.ToLower(ifc.Name)
+		skip := false
+		for _, v := range virtualIfaces {
+			if strings.Contains(name, v) {
+				skip = true
+				break
+			}
+		}
+		if skip {
 			continue
 		}
 		addrs, _ := ifc.Addrs()
@@ -167,8 +189,20 @@ func lanURLs() []string {
 			if ip == nil || !ip.IsPrivate() {
 				continue
 			}
-			urls = append(urls, fmt.Sprintf("http://%s:%d", ip, cfg.Puerto))
+			rank := 2
+			switch {
+			case ip[0] == 192 && ip[1] == 168:
+				rank = 0
+			case ip[0] == 10:
+				rank = 1
+			}
+			cs = append(cs, cand{fmt.Sprintf("http://%s:%d", ip, cfg.Puerto), rank})
 		}
+	}
+	sort.SliceStable(cs, func(i, j int) bool { return cs[i].rank < cs[j].rank })
+	urls := make([]string, 0, len(cs))
+	for _, c := range cs {
+		urls = append(urls, c.url)
 	}
 	return urls
 }

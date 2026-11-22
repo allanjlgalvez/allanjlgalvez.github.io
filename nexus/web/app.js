@@ -1064,7 +1064,8 @@ async function viewSettings() {
           urls.map(u => h('div', { class: 'qr' }, h('img', { src: '/api/qr?text=' + encodeURIComponent(u), alt: 'Código QR' }), h('div', { class: 'url' }, u))),
           h('ol', { class: 'steps' },
             h('li', null, 'La primera vez, Windows preguntará si permites el acceso: elige «Redes privadas».'),
-            h('li', null, 'Tu red Wi-Fi de casa debe estar marcada como «Privada» en Windows.'),
+            h('li', null, 'La red de la PC (Wi-Fi o cable Ethernet) debe estar marcada como «Privada» en Windows: Configuración → Red e Internet → Ethernet/Wi-Fi → Tipo de perfil de red.'),
+            h('li', null, 'El celular debe estar en el Wi-Fi del mismo módem que la PC, no en la red de invitados.'),
             h('li', null, 'La PC debe estar encendida con NEXUS abierto.'),
             h('li', null, 'Tip: en el celular usa «Agregar a pantalla de inicio» para tenerlo como app.')))
           : h('p', { class: 'muted' }, 'No se detectó una red local. Conecta la PC a tu Wi-Fi o cable de red y recarga esta página.'))

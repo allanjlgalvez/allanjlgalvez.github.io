@@ -60,9 +60,27 @@ La versión instalada aparece en **Sistema → Información**.
 4. Tip: en el navegador del celular usa **Agregar a pantalla de inicio** para
    tenerlo como una app.
 
-Si el celular no conecta, revisa que en Windows tu red esté marcada como
-**Privada** (Configuración → Red e Internet → Propiedades de tu Wi-Fi) y que el
-Firewall permita `nexus.exe` en redes privadas.
+Si el celular no conecta (sobre todo con la PC conectada por **cable Ethernet**):
+
+1. **Perfil de red Privado.** Windows suele marcar el cable como red *Pública*
+   y entonces bloquea al celular. Ve a Configuración → Red e Internet →
+   **Ethernet** (o Wi-Fi) → **Tipo de perfil de red → Privada**. O en PowerShell
+   *como administrador*:
+   ```powershell
+   Get-NetConnectionProfile
+   Set-NetConnectionProfile -InterfaceAlias "Ethernet" -NetworkCategory Private
+   ```
+2. **Permiso en el Firewall** (PowerShell como administrador):
+   ```powershell
+   New-NetFirewallRule -DisplayName "NEXUS" -Direction Inbound -Program "D:\Nexus\nexus.exe" -Action Allow -Profile Private
+   ```
+3. **Misma red.** Compara las IP: la de la PC (la que muestra NEXUS) y la del
+   celular (Ajustes → Wi-Fi → detalles). Los tres primeros números deben
+   coincidir, por ejemplo `192.168.1.50` y `192.168.1.73`. Si no coinciden,
+   el celular está en la red de invitados o en un repetidor con otra red.
+4. Algunos módems tienen activado el **aislamiento de clientes / AP isolation**,
+   que impide que los dispositivos se vean entre sí. Se desactiva en la
+   configuración del módem.
 
 > La PC tiene que estar encendida y con NEXUS abierto. Si en algún momento
 > quieres un acceso 24/7, NEXUS también corre en una Raspberry Pi o NAS de casa
