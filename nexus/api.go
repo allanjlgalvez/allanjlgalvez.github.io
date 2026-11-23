@@ -19,6 +19,7 @@ import (
 )
 
 func routes(web fs.FS) http.Handler {
+	_ = mime.AddExtensionType(".webmanifest", "application/manifest+json")
 	mux := http.NewServeMux()
 
 	// Públicas

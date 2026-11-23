@@ -243,7 +243,7 @@ async function enter() {
 }
 
 const logoEl = () => h('div', { class: 'logo', onclick: () => { location.hash = '#/red'; } },
-  (() => { const t = document.createElement('template'); t.innerHTML = '<svg viewBox="0 0 64 64"><path d="M32 6l22 13v26L32 58 10 45V19z" fill="none" stroke="#00f0ff" stroke-width="4"/><path d="M23 42V22l18 20V22" fill="none" stroke="#ff2a6d" stroke-width="5" stroke-linejoin="bevel"/></svg>'; return t.content.firstChild; })(),
+  (() => { const t = document.createElement('template'); t.innerHTML = '<svg viewBox="0 0 64 64"><path d="M32 6l22 13v26L32 58 10 45V19z" fill="none" stroke="#00f0ff" stroke-width="4"/><path d="M21.75 43.25V20.75H27l10 14.5V20.75h5.25v22.5H37l-10-14.5v14.5z" fill="#ff2a6d"/></svg>'; return t.content.firstChild; })(),
   h('span', null, 'NEX', h('b', null, 'U'), 'S'));
 
 async function showGate(setup) {

@@ -36,6 +36,10 @@ echo.
 echo   Listo: NEXUS %VER%
 echo   (la version anterior quedo como nexus.anterior.exe)
 echo.
+rem Acceso directo con icono en el escritorio (solo si no existe)
+powershell -NoProfile -ExecutionPolicy Bypass -Command "$d=[Environment]::GetFolderPath('Desktop'); $l=Join-Path $d 'NEXUS.lnk'; if(-not (Test-Path $l)){ $s=(New-Object -ComObject WScript.Shell).CreateShortcut($l); $s.TargetPath='%~dp0nexus.exe'; $s.WorkingDirectory='%~dp0'; $s.IconLocation='%~dp0nexus.exe,0'; $s.Description='NEXUS - contactos'; $s.Save(); Write-Host '  Acceso directo NEXUS creado en el escritorio.' }" 2>nul
+rem Refresca el cache de iconos de Windows para que se vea el icono nuevo
+ie4uinit.exe -show >nul 2>nul
 start "" "%~dp0nexus.exe"
 
 rem Este mismo archivo tambien se actualiza, al final y en segundo plano.

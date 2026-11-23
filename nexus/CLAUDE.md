@@ -40,7 +40,9 @@ D:\Nexus\
         ├── cleaner.go     depurador: papelera, verificar, fusionar duplicados, exportar CSV de Google y JSON
         ├── console_windows.go  consola UTF-8 y título en Windows
         ├── web\index.html, app.css, app.js, import.js, cleaner.js, vendor\ (cytoscape 3.35, fuentes Rajdhani/Orbitron)
-        ├── actualizar.bat (CRLF, sin acentos), build.sh, LEEME.md (manual para Allan)
+        ├── actualizar.bat (CRLF, sin acentos; crea el acceso directo del escritorio), build.sh, LEEME.md (manual para Allan)
+        ├── assets\icon.svg  icono maestro; winres\ (PNGs + winres.json) → rsrc_windows_amd64.syso (icono y versión del .exe)
+        ├── web\icons\ + web\manifest.webmanifest  iconos para «Agregar a pantalla de inicio»
         └── dev\seed.py    carga datos ficticios de prueba
 ```
 
@@ -114,6 +116,13 @@ python dev\seed.py
 Para que Allan use la versión nueva: cerrar NEXUS y copiar el `.exe` compilado
 a `D:\Nexus\nexus.exe` (o hacer push y que él corra `actualizar.bat`).
 
+## Icono
+
+Si cambia `assets/icon.svg`: volver a generar los PNG (`winres/icon-*.png`,
+`web/icons/*`, `web/favicon.svg`) y luego
+`go run github.com/tc-hib/go-winres@latest make --in winres/winres.json --arch amd64`
+para regenerar `rsrc_windows_amd64.syso` (se compila solo en Windows/amd64).
+
 ## Flujo de publicación
 
 1. Commit en español y `git push origin ccr-04ee6d84-hyehhm`.
@@ -136,6 +145,5 @@ contactos (duplicados, incompletos, empresas, triage rápido, papelera, exportar
 Ideas pendientes que se platicaron o que convienen:
 - Opción de emergencia para restablecer la contraseña desde la PC (sin perder datos).
 - Recordatorios (cumpleaños, vigencia de seguros, citas médicas).
-- Icono propio para `nexus.exe`.
 - Mover el proyecto a un repositorio privado (habría que cambiar cómo descarga `actualizar.bat`).
 - La base no está cifrada en disco; se recomienda BitLocker/VeraCrypt.

@@ -29,9 +29,10 @@ como un diagrama interactivo.
    ciérrala para apagarlo.
 4. Crea tu contraseña. **Guárdala bien: no hay forma de recuperarla.**
 
-Desde entonces, para abrir NEXUS solo das doble clic en `D:\Nexus\nexus.exe`.
-Te conviene crear un acceso directo en el escritorio: clic derecho sobre
-`nexus.exe` → **Mostrar más opciones → Enviar a → Escritorio**.
+Desde entonces, para abrir NEXUS das doble clic en el acceso directo **NEXUS**
+que `actualizar.bat` crea en tu escritorio (el hexágono cian con la N rosa), o
+en `D:\Nexus\nexus.exe`. En el celular, al usar «Agregar a pantalla de inicio»
+aparece el mismo icono.
 
 ```
 D:\Nexus\
