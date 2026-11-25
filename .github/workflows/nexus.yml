@@ -1,0 +1,50 @@
+# Compila NEXUS para Windows en cada cambio y publica el .exe en la
+# versión "nexus-latest". El archivo actualizar.bat descarga desde ahí.
+name: NEXUS · compilar y publicar
+
+on:
+  push:
+    paths:
+      - "nexus/**"
+      - ".github/workflows/nexus.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: nexus-release
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: nexus/go.mod
+          cache-dependency-path: nexus/go.sum
+
+      - name: Compilar nexus.exe
+        working-directory: nexus
+        run: |
+          go vet ./...
+          VERSION="1.2.${{ github.run_number }}"
+          GOOS=windows GOARCH=amd64 CGO_ENABLED=0 \
+            go build -trimpath -ldflags "-s -w -X main.version=${VERSION}" -o nexus.exe .
+          echo "$VERSION" > version.txt
+
+      - name: Publicar en la versión nexus-latest
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          VERSION=$(cat nexus/version.txt)
+          if ! gh release view nexus-latest >/dev/null 2>&1; then
+            gh release create nexus-latest --title "NEXUS (última versión)" \
+              --notes "Descarga actualizar.bat, ponlo en D:\\Nexus y dale doble clic." \
+              --prerelease --target "${{ github.sha }}"
+          fi
+          gh release edit nexus-latest --notes "Versión ${VERSION} · commit ${GITHUB_SHA::7} · $(date -u +%Y-%m-%d)"
+          gh release upload nexus-latest nexus/nexus.exe nexus/LEEME.md nexus/actualizar.bat nexus/version.txt --clobber

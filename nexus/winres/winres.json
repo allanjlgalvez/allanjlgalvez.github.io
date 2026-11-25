@@ -1,0 +1,37 @@
+{
+  "RT_GROUP_ICON": {
+    "APP": {
+      "0000": ["icon-256.png", "icon-128.png", "icon-64.png", "icon-48.png", "icon-32.png", "icon-24.png", "icon-16.png"]
+    }
+  },
+  "RT_MANIFEST": {
+    "#1": {
+      "0409": {
+        "identity": { "name": "NEXUS", "version": "1.2.0.0" },
+        "description": "NEXUS - base de datos personal de contactos",
+        "minimum-os": "win7",
+        "execution-level": "as invoker",
+        "dpi-awareness": "system",
+        "use-common-controls-v6": true
+      }
+    }
+  },
+  "RT_VERSION": {
+    "#1": {
+      "0000": {
+        "fixed": { "file_version": "1.2.0.0", "product_version": "1.2.0.0" },
+        "info": {
+          "0409": {
+            "CompanyName": "NEXUS",
+            "FileDescription": "NEXUS - base de datos personal de contactos",
+            "FileVersion": "1.2.0",
+            "InternalName": "nexus",
+            "OriginalFilename": "nexus.exe",
+            "ProductName": "NEXUS",
+            "ProductVersion": "1.2.0"
+          }
+        }
+      }
+    }
+  }
+}
